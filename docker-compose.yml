@@ -43,8 +43,8 @@ services:
       - ENABLE_MEMORY_MONITORING=${ENABLE_MEMORY_MONITORING:-true}
 
     volumes:
-      # Mount voice sample file (optional)
-      - ${VOICE_SAMPLE_HOST_PATH:-./voice-sample.mp3}:/app/voice-sample.mp3:ro
+      # Mount voice sample file (optional - removed to prevent mount errors if file is missing on host)
+      # - ${VOICE_SAMPLE_HOST_PATH:-./voice-sample.mp3}:/app/voice-sample.mp3:ro
 
       # Mount model cache for persistence
       - chatterbox-models:/cache
