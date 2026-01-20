@@ -1,4 +1,7 @@
 version: '3.8'
+networks:
+  internal-net:
+    external: true
 
 services:
   # Main API Service (always included)
@@ -9,6 +12,8 @@ services:
     container_name: chatterbox-tts-api-cpu
     ports:
       - '${PORT:-4123}:${PORT:-4123}'
+    networks:
+      - internal-net
     environment:
       # API Configuration
       - PORT=${PORT:-4123}
