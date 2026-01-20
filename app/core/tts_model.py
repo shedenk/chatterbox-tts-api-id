@@ -11,6 +11,11 @@ from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 from app.core.mtl import SUPPORTED_LANGUAGES
 from app.config import Config, detect_device
 
+# For Indonesian Optimization
+from huggingface_hub import hf_hub_download
+from safetensors.torch import load_file
+import torch
+
 # Global model instance
 _model = None
 _device = None
@@ -31,6 +36,34 @@ class InitializationState(Enum):
 async def initialize_model():
     """Initialize the Chatterbox TTS model"""
     global _model, _device, _initialization_state, _initialization_error, _initialization_progress, _is_multilingual, _supported_languages
+    
+    # Inner helper for Indonesian optimization
+    def apply_indonesian_optimization(model):
+        if not Config.USE_INDONESIAN_OPTIMIZED_MODEL:
+            return
+            
+        print(f"Applying Indonesian optimization from {Config.INDONESIAN_MODEL_REPO}...")
+        try:
+            # Download weights
+            checkpoint_path = hf_hub_download(
+                repo_id=Config.INDONESIAN_MODEL_REPO, 
+                filename="t3_cfg.safetensors"
+            )
+            
+            # Load weights (forcing CPU if needed as handled by patches earlier)
+            weights = load_file(checkpoint_path, device='cpu')
+            
+            # Inject weights into the T3 module
+            # Both standard and multilingual models use .t3 for the text-to-token module
+            if hasattr(model, 't3'):
+                model.t3.load_state_dict(weights)
+                print(f"✓ Indonesian optimized weights applied successfully")
+            else:
+                print(f"⚠️ Warning: Model does not have a 't3' module, skipping optimization")
+                
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to apply Indonesian optimization: {e}")
+            # Non-fatal error, continue with base model
     
     try:
         _initialization_state = InitializationState.INITIALIZING.value
@@ -94,6 +127,12 @@ async def initialize_model():
             )
             _is_multilingual = True
             _supported_languages = SUPPORTED_LANGUAGES.copy()
+            
+            # Apply Indonesian optimization if enabled
+            if Config.USE_INDONESIAN_OPTIMIZED_MODEL:
+                _initialization_progress = "Applying Indonesian optimization..."
+                apply_indonesian_optimization(_model)
+                
             print(f"✓ Multilingual model initialized with {len(_supported_languages)} languages")
         else:
             print(f"Loading standard Chatterbox TTS model...")
@@ -102,8 +141,14 @@ async def initialize_model():
                 lambda: ChatterboxTTS.from_pretrained(device=_device)
             )
             _is_multilingual = False
-            _supported_languages = {"en": "English"}  # Standard model only supports English
-            print(f"✓ Standard model initialized (English only)")
+            _supported_languages = {"en": "English", "id": "Indonesian"}  # Add Indonesian support for standard model too
+            
+            # Apply Indonesian optimization if enabled
+            if Config.USE_INDONESIAN_OPTIMIZED_MODEL:
+                _initialization_progress = "Applying Indonesian optimization..."
+                apply_indonesian_optimization(_model)
+                
+            print(f"✓ Standard model initialized")
         
         _initialization_state = InitializationState.READY.value
         _initialization_progress = "Model ready"

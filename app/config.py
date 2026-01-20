@@ -45,6 +45,10 @@ class Config:
     # Multilingual model settings
     USE_MULTILINGUAL_MODEL = os.getenv('USE_MULTILINGUAL_MODEL', 'true').lower() == 'true'
     
+    # Indonesian Optimization
+    USE_INDONESIAN_OPTIMIZED_MODEL = os.getenv('USE_INDONESIAN_OPTIMIZED_MODEL', 'true').lower() == 'true'
+    INDONESIAN_MODEL_REPO = os.getenv('INDONESIAN_MODEL_REPO', 'grandhigh/Chatterbox-TTS-Indonesian')
+    
     # Memory management settings
     MEMORY_CLEANUP_INTERVAL = int(os.getenv('MEMORY_CLEANUP_INTERVAL', 5))
     CUDA_CACHE_CLEAR_INTERVAL = int(os.getenv('CUDA_CACHE_CLEAR_INTERVAL', 3))
