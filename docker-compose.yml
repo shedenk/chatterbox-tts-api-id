@@ -53,7 +53,7 @@ services:
       - chatterbox-voices:/voices
 
       # Mount long text data for persistence
-      - chatterbox-longtext-data:${LONG_TEXT_DATA_DIR:-/data/long_text_jobs}
+      - chatterbox-longtext-data:/data/long_text_jobs
 
       # Optional: Mount custom voice samples directory (legacy)
       - ${VOICE_SAMPLES_DIR:-./voice-samples}:/app/voice-samples:ro
