@@ -176,11 +176,16 @@ async def initialize_model():
                     lambda: apply_indonesian_optimization(_model)
                 )
                 
-            # Set sampling steps if supported by the model instance
-            if hasattr(_model, 'n_timesteps'):
-                old_steps = getattr(_model, 'n_timesteps')
-                setattr(_model, 'n_timesteps', Config.SAMPLING_STEPS)
-                print(f"⚡ Set model sampling steps: {old_steps} -> {Config.SAMPLING_STEPS}")
+            # Deep set sampling steps for speed optimization
+            targets = [_model]
+            if hasattr(_model, 's3gen'): targets.append(_model.s3gen)
+            if hasattr(_model, 's3gen') and hasattr(_model.s3gen, 'cfm'): targets.append(_model.s3gen.cfm)
+            
+            for target in targets:
+                if hasattr(target, 'n_timesteps'):
+                    old_steps = getattr(target, 'n_timesteps')
+                    setattr(target, 'n_timesteps', Config.SAMPLING_STEPS)
+                    print(f"⚡ Set {type(target).__name__} sampling steps: {old_steps} -> {Config.SAMPLING_STEPS}")
                 
             print(f"✓ Standard model initialized")
         

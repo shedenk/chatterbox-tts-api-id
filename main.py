@@ -25,9 +25,11 @@ def main():
             port=Config.PORT,
             reload=False,
             access_log=True,
-            timeout_keep_alive=300,  # 5 minutes
-            limit_concurrency=100,
-            timeout_graceful_shutdown=30
+            timeout_keep_alive=600,      # 10 minutes
+            timeout_notify=30,           # Signal check frequency
+            timeout_graceful_shutdown=60, # More time for long jobs to finish
+            limit_concurrency=50,        # Reduce concurrency to save CPU for each job
+            backlog=2048                 # Higher request backlog
         )
     except Exception as e:
         print(f"Failed to start server: {e}")

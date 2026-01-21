@@ -329,7 +329,7 @@ def get_streaming_settings(
     Returns a dictionary with optimized settings for streaming.
     """
     settings = {
-        "chunk_size": streaming_chunk_size or 200,
+        "chunk_size": streaming_chunk_size or 80,
         "strategy": streaming_strategy or "sentence",
         "quality": streaming_quality or "balanced"
     }

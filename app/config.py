@@ -21,7 +21,7 @@ class Config:
     EXAGGERATION: float = float(os.getenv("EXAGGERATION", "0.5"))
     CFG_WEIGHT: float = float(os.getenv("CFG_WEIGHT", "0.5"))
     TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.8"))
-    SAMPLING_STEPS: int = int(os.getenv("SAMPLING_STEPS", "50"))
+    SAMPLING_STEPS: int = int(os.getenv("SAMPLING_STEPS", "10"))
     
     # Text processing
     MAX_CHUNK_LENGTH = int(os.getenv('MAX_CHUNK_LENGTH', 280))
