@@ -7,8 +7,13 @@ It imports the FastAPI app from the organized app package.
 """
 
 import uvicorn
+import warnings
 from app.main import app
 from app.config import Config
+
+# Silence redundant audio loading warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="chatterbox.tts")
+warnings.filterwarnings("ignore", category=FutureWarning, module="librosa.core.audio")
 
 
 def main():
@@ -26,12 +31,13 @@ def main():
             reload=False,
             access_log=True,
             timeout_keep_alive=600,      # 10 minutes
-            timeout_graceful_shutdown=60, # More time for long jobs to finish
             limit_concurrency=50,        # Reduce concurrency to save CPU for each job
             backlog=2048                 # Higher request backlog
         )
     except Exception as e:
-        print(f"Failed to start server: {e}")
+        import traceback
+        print(f"CRITICAL: Failed to start server: {e}")
+        traceback.print_exc()
         exit(1)
 
 

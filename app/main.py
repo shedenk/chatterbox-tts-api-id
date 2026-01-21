@@ -101,6 +101,17 @@ app.add_middleware(
 app.include_router(api_router)
 
 
+@app.get("/")
+async def root():
+    """Root endpoint for basic connectivity check"""
+    return {
+        "status": "online",
+        "message": "Chatterbox TTS API is running",
+        "version": get_version(),
+        "docs": "/docs"
+    }
+
+
 # Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
