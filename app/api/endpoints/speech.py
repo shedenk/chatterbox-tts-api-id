@@ -168,6 +168,14 @@ async def generate_speech_internal(
     
     update_tts_status(request_id, TTSStatus.INITIALIZING, "Checking model availability")
     
+    if not is_ready():
+        status_msg = "Model is still initializing. Please wait a few minutes and try again."
+        update_tts_status(request_id, TTSStatus.ERROR, error_message=status_msg)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"error": {"message": status_msg, "type": "model_loading"}}
+        )
+
     model = get_model()
     if model is None:
         update_tts_status(request_id, TTSStatus.ERROR, error_message="Model not loaded")
@@ -391,6 +399,14 @@ async def generate_speech_streaming(
     
     update_tts_status(request_id, TTSStatus.INITIALIZING, "Checking model availability (streaming)")
     
+    if not is_ready():
+        status_msg = "Model is still initializing. Please wait a few minutes and try again."
+        update_tts_status(request_id, TTSStatus.ERROR, error_message=status_msg)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"error": {"message": status_msg, "type": "model_loading"}}
+        )
+
     model = get_model()
     if model is None:
         update_tts_status(request_id, TTSStatus.ERROR, error_message="Model not loaded")
@@ -590,6 +606,14 @@ async def generate_speech_sse(
     
     update_tts_status(request_id, TTSStatus.INITIALIZING, "Checking model availability (SSE streaming)")
     
+    if not is_ready():
+        status_msg = "Model is still initializing. Please wait a few minutes and try again."
+        update_tts_status(request_id, TTSStatus.ERROR, error_message=status_msg)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"error": {"message": status_msg, "type": "model_loading"}}
+        )
+
     model = get_model()
     if model is None:
         update_tts_status(request_id, TTSStatus.ERROR, error_message="Model not loaded")

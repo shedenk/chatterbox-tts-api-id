@@ -130,8 +130,12 @@ async def initialize_model():
             
             # Apply Indonesian optimization if enabled
             if Config.USE_INDONESIAN_OPTIMIZED_MODEL:
-                _initialization_progress = "Applying Indonesian optimization..."
-                apply_indonesian_optimization(_model)
+                _initialization_progress = "Applying Indonesian optimization in background..."
+                # Run optimization in executor to avoid blocking the event loop
+                await loop.run_in_executor(
+                    None,
+                    lambda: apply_indonesian_optimization(_model)
+                )
                 
             print(f"✓ Multilingual model initialized with {len(_supported_languages)} languages")
         else:
@@ -145,8 +149,12 @@ async def initialize_model():
             
             # Apply Indonesian optimization if enabled
             if Config.USE_INDONESIAN_OPTIMIZED_MODEL:
-                _initialization_progress = "Applying Indonesian optimization..."
-                apply_indonesian_optimization(_model)
+                _initialization_progress = "Applying Indonesian optimization in background..."
+                # Run optimization in executor to avoid blocking the event loop
+                await loop.run_in_executor(
+                    None,
+                    lambda: apply_indonesian_optimization(_model)
+                )
                 
             print(f"✓ Standard model initialized")
         
