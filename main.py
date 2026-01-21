@@ -24,7 +24,10 @@ def main():
             host=Config.HOST,
             port=Config.PORT,
             reload=False,
-            access_log=True
+            access_log=True,
+            timeout_keep_alive=300,  # 5 minutes
+            limit_concurrency=100,
+            timeout_graceful_shutdown=30
         )
     except Exception as e:
         print(f"Failed to start server: {e}")
