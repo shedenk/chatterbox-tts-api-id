@@ -4,41 +4,52 @@ Chatterbox TTS API Entry Point
 
 This is the main entry point for the application.
 It imports the FastAPI app from the organized app package.
-"""
+import sys
 
-import uvicorn
-import warnings
-from app.main import app
-from app.config import Config
-
-# Silence redundant audio loading warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="chatterbox.tts")
-warnings.filterwarnings("ignore", category=FutureWarning, module="librosa.core.audio")
-
+# Silence redundant audio loading warnings early
+try:
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="chatterbox.tts")
+    warnings.filterwarnings("ignore", category=FutureWarning, module="librosa.core.audio")
+except ImportError:
+    pass
 
 def main():
     """Main entry point"""
     try:
-        Config.validate()
-        print(f"Starting Chatterbox TTS API server...")
-        print(f"Server will run on http://{Config.HOST}:{Config.PORT}")
-        print(f"API documentation available at http://{Config.HOST}:{Config.PORT}/docs")
+        # Local imports to catch errors during specific module initialization
+        print("🔍 Loading application modules...")
+        import uvicorn
+        from app.main import app
+        from app.config import Config
         
+        Config.validate()
+        
+        # User-friendly host message
+        display_host = "localhost" if Config.HOST == "0.0.0.0" else Config.HOST
+        print(f"🚀 Starting Chatterbox TTS API server...")
+        print(f"📡 Server will run on http://{display_host}:{Config.PORT}")
+        print(f"📚 API documentation available at http://{display_host}:{Config.PORT}/docs")
+        print(f"🔗 Health check available at http://{display_host}:{Config.PORT}/")
+        
+        # Simplified uvicorn call - use defaults for stability
         uvicorn.run(
             "app.main:app",
             host=Config.HOST,
             port=Config.PORT,
             reload=False,
             access_log=True,
-            timeout_keep_alive=600,      # 10 minutes
-            limit_concurrency=50,        # Reduce concurrency to save CPU for each job
-            backlog=2048                 # Higher request backlog
+            timeout_keep_alive=600  # 10 minutes for long generations
         )
+    except ImportError as e:
+        print(f"\n❌ CRITICAL: Dependency error: {e}")
+        print("Ensure all requirements are installed: pip install -r requirements.txt")
+        sys.exit(1)
     except Exception as e:
         import traceback
-        print(f"CRITICAL: Failed to start server: {e}")
+        print(f"\n❌ CRITICAL: Failed to start server: {e}")
         traceback.print_exc()
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
