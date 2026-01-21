@@ -42,13 +42,23 @@ async def initialize_model():
         if not Config.USE_INDONESIAN_OPTIMIZED_MODEL:
             return
             
-        print(f"Applying Indonesian optimization from {Config.INDONESIAN_MODEL_REPO}...")
+        repo_id = Config.INDONESIAN_MODEL_REPO
+        filename = "t3_cfg.safetensors"
+        
+        print(f"Checking for Indonesian optimization weights from {repo_id}...")
         try:
-            # Download weights
+            # Check if likely already in cache to provide better logging
+            # (hf_hub_download handles cache internally, but we want to be explicit in logs)
             checkpoint_path = hf_hub_download(
-                repo_id=Config.INDONESIAN_MODEL_REPO, 
-                filename="t3_cfg.safetensors"
+                repo_id=repo_id, 
+                filename=filename,
+                cache_dir=Config.MODEL_CACHE_DIR
             )
+            
+            # Check if the path is already within our persistent cache dir
+            is_cached = Config.MODEL_CACHE_DIR in checkpoint_path
+            msg_prefix = "✓ Loading from persistent cache:" if is_cached else "✓ Downloaded:"
+            print(f"{msg_prefix} {checkpoint_path}")
             
             # Load weights (forcing CPU if needed as handled by patches earlier)
             weights = load_file(checkpoint_path, device='cpu')
@@ -129,7 +139,10 @@ async def initialize_model():
             print(f"Loading Chatterbox Multilingual TTS model...")
             _model = await loop.run_in_executor(
                 None, 
-                lambda: ChatterboxMultilingualTTS.from_pretrained(device=_device)
+                lambda: ChatterboxMultilingualTTS.from_pretrained(
+                    device=_device,
+                    cache_dir=Config.MODEL_CACHE_DIR
+                )
             )
             _is_multilingual = True
             _supported_languages = SUPPORTED_LANGUAGES.copy()
@@ -148,7 +161,10 @@ async def initialize_model():
             print(f"Loading standard Chatterbox TTS model...")
             _model = await loop.run_in_executor(
                 None, 
-                lambda: ChatterboxTTS.from_pretrained(device=_device)
+                lambda: ChatterboxTTS.from_pretrained(
+                    device=_device,
+                    cache_dir=Config.MODEL_CACHE_DIR
+                )
             )
             _is_multilingual = False
             _supported_languages = {"en": "English", "id": "Indonesian"}  # Add Indonesian support for standard model too
