@@ -19,9 +19,13 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Activate the virtual environment for subsequent RUN commands
-ENV VIRTUAL_ENV=/app/.venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# Set working directory
+WORKDIR /app
+
+# Build arguments for Coolify compatibility
+ARG PORT=4123
+ARG HOST=0.0.0.0
+ARG DEVICE=cpu
 
 # Install PyTorch CPU version first (to avoid CUDA dependencies)
 RUN pip install --no-cache-dir --upgrade pip && \

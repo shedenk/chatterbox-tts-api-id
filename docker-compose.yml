@@ -1,7 +1,7 @@
 version: '3.8'
 networks:
   internal-net:
-    external: true
+    name: internal-net
 services:
   # Main API Service (always included)
   chatterbox-tts:
