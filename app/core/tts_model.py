@@ -162,6 +162,12 @@ async def initialize_model():
                     lambda: apply_indonesian_optimization(_model)
                 )
                 
+            # Set sampling steps if supported by the model instance
+            if hasattr(_model, 'n_timesteps'):
+                old_steps = getattr(_model, 'n_timesteps')
+                setattr(_model, 'n_timesteps', Config.SAMPLING_STEPS)
+                print(f"⚡ Set model sampling steps: {old_steps} -> {Config.SAMPLING_STEPS}")
+                
             print(f"✓ Standard model initialized")
         
         _initialization_state = InitializationState.READY.value
