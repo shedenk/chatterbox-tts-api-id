@@ -8,6 +8,7 @@ resemble-perth
 # PyTorch with CPU support (ensure CPU compatibility)
 torch>=2.0.0,<2.7.0
 torchaudio>=2.0.0,<2.7.0
+diffusers>=0.25.0
 
 # FastAPI and ASGI server
 fastapi>=0.104.0

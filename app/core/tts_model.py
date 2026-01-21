@@ -113,7 +113,13 @@ async def initialize_model():
                 safetensors.torch.load_file = force_cpu_load_file
         
         # Determine if we should use multilingual model
-        use_multilingual = Config.USE_MULTILINGUAL_MODEL
+        # NOTE: Indonesian optimized weights from grandhigh are based on the standard (704 tokens) 
+        # architecture and are INCOMPATIBLE with the multilingual (2352 tokens) architecture.
+        # We force standard model if Indonesian optimization is enabled.
+        use_multilingual = Config.USE_MULTILINGUAL_MODEL and not Config.USE_INDONESIAN_OPTIMIZED_MODEL
+        
+        if Config.USE_INDONESIAN_OPTIMIZED_MODEL and Config.USE_MULTILINGUAL_MODEL:
+            print("ℹ️ Indonesian optimization enabled: Switching to standard model architecture for compatibility")
         
         _initialization_progress = "Loading TTS model (this may take a while)..."
         # Initialize model with run_in_executor for non-blocking
