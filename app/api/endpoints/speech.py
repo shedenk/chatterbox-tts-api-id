@@ -22,7 +22,7 @@ from app.core import (
     split_text_into_chunks, concatenate_audio_chunks, add_route_aliases,
     TTSStatus, start_tts_request, update_tts_status, get_voice_library
 )
-from app.core.tts_model import get_model, is_multilingual
+from app.core.tts_model import get_model, is_multilingual, is_ready
 from app.core.text_processing import split_text_for_streaming, get_streaming_settings
 
 # Create router with aliasing support
