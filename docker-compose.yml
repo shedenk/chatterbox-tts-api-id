@@ -71,19 +71,6 @@ services:
       retries: 3
       start_period: 300s
 
-  # Frontend Service with integrated proxy (optional - requires 'frontend' profile)
-  frontend:
-    profiles: ['frontend', 'ui', 'fullstack']
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: chatterbox-tts-frontend
-    ports:
-      - '${FRONTEND_PORT:-4321}:80' # Frontend serves on port 80 internally
-    depends_on:
-      - chatterbox-tts
-    restart: unless-stopped
-
 volumes:
   chatterbox-models:
     driver: local

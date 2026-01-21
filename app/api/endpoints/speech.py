@@ -255,7 +255,8 @@ async def generate_speech_internal(
                     "audio_prompt_path": voice_sample_path,
                     "exaggeration": exaggeration,
                     "cfg_weight": cfg_weight,
-                    "temperature": temperature
+                    "temperature": temperature,
+                    "ddim_steps": Config.SAMPLING_STEPS
                 }
                 
                 # Add language_id for multilingual models
@@ -508,6 +509,7 @@ async def generate_speech_streaming(
                         exaggeration=exaggeration,
                         cfg_weight=cfg_weight,
                         temperature=temperature,
+                        ddim_steps=Config.SAMPLING_STEPS,
                         **({'language_id': language_id} if is_multilingual() else {})
                     )
                 )
@@ -719,6 +721,7 @@ async def generate_speech_sse(
                         exaggeration=exaggeration,
                         cfg_weight=cfg_weight,
                         temperature=temperature,
+                        ddim_steps=Config.SAMPLING_STEPS,
                         **({'language_id': language_id} if is_multilingual() else {})
                     )
                 )
@@ -980,6 +983,7 @@ async def text_to_speech_with_upload(
                         exaggeration=exaggeration,
                         cfg_weight=cfg_weight,
                         temperature=temperature,
+                        ddim_steps=Config.SAMPLING_STEPS,
                         streaming_chunk_size=streaming_chunk_size,
                         streaming_strategy=streaming_strategy,
                         streaming_quality=streaming_quality
@@ -1179,6 +1183,7 @@ async def stream_text_to_speech_with_upload(
                 exaggeration=exaggeration,
                 cfg_weight=cfg_weight,
                 temperature=temperature,
+                ddim_steps=Config.SAMPLING_STEPS,
                 streaming_chunk_size=streaming_chunk_size,
                 streaming_strategy=streaming_strategy,
                 streaming_quality=streaming_quality

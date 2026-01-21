@@ -18,9 +18,10 @@ class Config:
     PORT = int(os.getenv('PORT', 4123))
     
     # TTS Model settings
-    EXAGGERATION = float(os.getenv('EXAGGERATION', 0.5))
-    CFG_WEIGHT = float(os.getenv('CFG_WEIGHT', 0.5))
-    TEMPERATURE = float(os.getenv('TEMPERATURE', 0.8))
+    EXAGGERATION: float = float(os.getenv("EXAGGERATION", "0.5"))
+    CFG_WEIGHT: float = float(os.getenv("CFG_WEIGHT", "0.5"))
+    TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.8"))
+    SAMPLING_STEPS: int = int(os.getenv("SAMPLING_STEPS", "50"))
     
     # Text processing
     MAX_CHUNK_LENGTH = int(os.getenv('MAX_CHUNK_LENGTH', 280))
@@ -43,7 +44,7 @@ class Config:
     LONG_TEXT_MAX_CONCURRENT_JOBS = int(os.getenv('LONG_TEXT_MAX_CONCURRENT_JOBS', 3))
 
     # Multilingual model settings
-    USE_MULTILINGUAL_MODEL = os.getenv('USE_MULTILINGUAL_MODEL', 'true').lower() == 'true'
+    USE_MULTILINGUAL_MODEL: bool = os.getenv("USE_MULTILINGUAL_MODEL", "false").lower() == "true"
     
     # Indonesian Optimization
     USE_INDONESIAN_OPTIMIZED_MODEL = os.getenv('USE_INDONESIAN_OPTIMIZED_MODEL', 'true').lower() == 'true'
