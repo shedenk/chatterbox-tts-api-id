@@ -6,14 +6,43 @@ import gc
 import torch
 import re
 from typing import List, Optional, Tuple
+import unicodedata
 from app.config import Config
 from app.models.long_text import LongTextChunk
+
+
+def normalize_text(text: str) -> str:
+    """ Normalize text to remove or replace non-standard characters """
+    if not text:
+        return ""
+    
+    # Replace common accented characters that might trip up simple models
+    # This keeps the character but decomposes it, then we can filter if needed
+    # For now, let's just do a simple replacement for common ones like Pelé
+    replacements = {
+        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+        'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a',
+        'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+        'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o',
+        'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+        'ñ': 'n', 'ç': 'c'
+    }
+    
+    for char, replacement in replacements.items():
+        if char in text:
+            print(f"🔄 Normalizing character '{char}' -> '{replacement}' in text")
+            text = text.replace(char, replacement)
+            
+    return text
 
 
 def split_text_into_chunks(text: str, max_length: int = None) -> list:
     """Split text into manageable chunks for TTS processing"""
     if max_length is None:
         max_length = Config.MAX_CHUNK_LENGTH
+    
+    # Normalize text early to avoid issues with special characters
+    text = normalize_text(text)
     
     if len(text) <= max_length:
         return [text]
@@ -130,6 +159,9 @@ def split_text_for_streaming(
     Returns:
         List of text chunks optimized for streaming
     """
+    # Normalize text early
+    text = normalize_text(text)
+    
     # Apply quality presets
     if quality:
         if quality == "fast":
@@ -394,12 +426,10 @@ def split_text_for_long_generation(text: str,
 
     Args:
         text: Input text to split (should be > 3000 characters)
-        max_chunk_size: Maximum characters per chunk (defaults to Config.LONG_TEXT_CHUNK_SIZE)
-        overlap_chars: Number of characters to overlap between chunks for context
-
-    Returns:
-        List of LongTextChunk objects with metadata
     """
+    # Normalize text early
+    text = normalize_text(text)
+    
     if max_chunk_size is None:
         max_chunk_size = Config.LONG_TEXT_CHUNK_SIZE
 

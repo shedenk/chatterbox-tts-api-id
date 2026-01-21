@@ -73,13 +73,17 @@ async def initialize_model():
                 
         except Exception as e:
             print(f"⚠️ Warning: Failed to apply Indonesian optimization: {e}")
+            import traceback
+            traceback.print_exc()
             # Non-fatal error, continue with base model
     
     try:
+        print(f"🎬 Starting model initialization process...")
         _initialization_state = InitializationState.INITIALIZING.value
         _initialization_progress = "Validating configuration..."
         
         Config.validate()
+        print(f"✅ Configuration validated")
         _device = detect_device()
         
         print(f"Initializing Chatterbox TTS model...")
@@ -131,6 +135,7 @@ async def initialize_model():
         if Config.USE_INDONESIAN_OPTIMIZED_MODEL and Config.USE_MULTILINGUAL_MODEL:
             print("ℹ️ Indonesian optimization enabled: Switching to standard model architecture for compatibility")
         
+        print(f"📦 Model loading strategy: {'multilingual' if use_multilingual else 'standard'}")
         _initialization_progress = "Loading TTS model (this may take a while)..."
         # Initialize model with run_in_executor for non-blocking
         loop = asyncio.get_event_loop()

@@ -267,12 +267,23 @@ async def generate_speech_internal(
                     lambda: model.generate(**generate_kwargs)
                 )
                 
+                if audio_tensor is None:
+                    print(f"⚠️ Warning: Model returned None for chunk {i+1}")
+                    continue
+                
                 # Ensure tensor is on the correct device and detached
                 if hasattr(audio_tensor, 'detach'):
                     audio_tensor = audio_tensor.detach()
                 
+                if hasattr(audio_tensor, 'shape') and (len(audio_tensor.shape) == 0 or audio_tensor.shape[-1] == 0):
+                    print(f"⚠️ Warning: Model returned empty tensor for chunk {i+1}")
+                    continue
+                    
                 audio_chunks.append(audio_tensor)
             
+            if not audio_chunks:
+                raise ValueError("No audio was generated for any of the text chunks")
+                
             # Periodic memory cleanup during generation
             if i > 0 and i % 3 == 0:  # Every 3 chunks
                 import gc
@@ -819,10 +830,13 @@ async def text_to_speech(request: TTSRequest):
     """Generate speech from text using Chatterbox TTS with voice selection support"""
     
     # Resolve voice name to file path and language
+    print(f"📥 Received TTS request: {request.input[:50]}...")
     voice_sample_path, language_id = resolve_voice_path_and_language(request.voice)
+    print(f"🎙️ Resolved voice: {request.voice} -> {voice_sample_path}, lang: {language_id}")
     
     # Check if SSE streaming is requested
     if request.stream_format == "sse":
+        print(f"📡 Starting SSE streaming response...")
         # Return SSE streaming response
         return StreamingResponse(
             generate_speech_sse(
@@ -1006,6 +1020,7 @@ async def text_to_speech_with_upload(
             )
         else:
             # Generate speech using internal function
+            print(f"🔊 Generating internal speech for upload request...")
             buffer = await generate_speech_internal(
                 text=input,
                 voice_sample_path=voice_sample_path,
@@ -1022,6 +1037,7 @@ async def text_to_speech_with_upload(
                 headers={"Content-Disposition": "attachment; filename=speech.wav"}
             )
             
+            print(f"📤 Returning audio response ({len(buffer.getvalue())} bytes)")
             return response
         
     finally:
@@ -1050,7 +1066,9 @@ async def stream_text_to_speech(request: TTSRequest):
     """Stream speech generation from text using Chatterbox TTS with voice selection support"""
     
     # Resolve voice name to file path and language
+    print(f"📥 Received streaming TTS request: {request.input[:50]}...")
     voice_sample_path, language_id = resolve_voice_path_and_language(request.voice)
+    print(f"🎙️ Resolved voice: {request.voice} -> {voice_sample_path}, lang: {language_id}")
     
     # Create streaming response
     return StreamingResponse(
@@ -1179,7 +1197,7 @@ async def stream_text_to_speech_with_upload(
                 exaggeration=exaggeration,
                 cfg_weight=cfg_weight,
                 temperature=temperature,
-                ddim_steps=Config.SAMPLING_STEPS,
+                # ddim_steps=Config.SAMPLING_STEPS, # REMOVED: generate_speech_streaming doesn't take ddim_steps
                 streaming_chunk_size=streaming_chunk_size,
                 streaming_strategy=streaming_strategy,
                 streaming_quality=streaming_quality

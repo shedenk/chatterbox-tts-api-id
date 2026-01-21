@@ -47,8 +47,8 @@ def main():
         print("Ensure all requirements are installed: pip install -r requirements.txt")
         sys.exit(1)
     except Exception as e:
+        print(f"\n❌ FATAL ERROR during server startup: {e}")
         import traceback
-        print(f"\n❌ CRITICAL: Failed to start server: {e}")
         traceback.print_exc()
         sys.exit(1)
 

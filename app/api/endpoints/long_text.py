@@ -31,7 +31,7 @@ from app.config import Config
 from app.core.long_text_jobs import get_job_manager
 from app.core.background_tasks import get_processor
 from app.core.text_processing import validate_long_text_input, estimate_processing_time
-from app.core import add_route_aliases
+from app.core import add_route_aliases, cleanup_memory # Added cleanup_memory
 
 # Create router with aliasing support
 base_router = APIRouter()
@@ -46,10 +46,13 @@ async def create_long_text_job(request: LongTextRequest):
     Text must be > 3000 characters to use this endpoint.
     For shorter texts, use /audio/speech instead.
     """
+    print(f"📥 Received long text TTS request: {len(request.input)} characters")
     try:
         # Validate the input text
+        print(f"🔍 Validating long text input...")
         is_valid, error_message = validate_long_text_input(request.input)
         if not is_valid:
+            print(f"❌ Long text validation failed: {error_message}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
@@ -61,10 +64,12 @@ async def create_long_text_job(request: LongTextRequest):
             )
 
         # Get job manager and processor
+        print(f"🔍 Getting job manager and processor...")
         job_manager = get_job_manager()
         processor = get_processor()
 
         # Create the job
+        print(f"🛠️ Creating long text job in manager...")
         job_id, estimated_chunks = job_manager.create_job(
             text=request.input,
             voice=request.voice,
@@ -74,9 +79,12 @@ async def create_long_text_job(request: LongTextRequest):
             temperature=request.temperature,
             session_id=request.session_id
         )
+        print(f"✅ Job created: {job_id}, estimated {estimated_chunks} chunks")
 
         # Submit for background processing
+        print(f"🚀 Submitting job {job_id} to background processor...")
         await processor.submit_job(job_id)
+        print(f"✅ Job {job_id} submitted successfully")
 
         # Estimate processing time
         estimated_time = estimate_processing_time(len(request.input))

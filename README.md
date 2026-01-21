@@ -1,27 +1,31 @@
 # Chatterbox TTS API
 
-Chatterbox TTS API adalah REST API berperforma tinggi untuk Text-to-Speech (TTS) yang mendukung kloning suara, multibahasa (23 bahasa), dan streaming real-time. API ini dirancang agar kompatibel dengan standar OpenAI, memudahkan integrasi dengan berbagai aplikasi.
+Chatterbox TTS API adalah REST API berperforma tinggi untuk Text-to-Speech (TTS) yang mendukung kloning suara, multibahasa (23 bahasa), dan streaming real-time. API ini dirancang agar kompatibel dengan standar OpenAI, memudahkan integrasi dengan berbagai aplikasi, dan memiliki optimasi khusus untuk Bahasa Indonesia.
 
 ## Fitur Utama
 
 - **OpenAI Compatible**: Mendukung endpoint `/v1/audio/speech`.
+- **Indonesian Optimized**: Menggunakan model khusus yang dioptimasi untuk ucapan Bahasa Indonesia yang natural.
 - **Voice Cloning**: Kloning suara instan hanya dengan sampel audio singkat.
-- **Multilingual**: Mendukung 23 bahasa termasuk Indonesia.
-- **Streaming**: Dukungan streaming audio secara real-time (WAV atau SSE).
-- **Long Text Processing**: Memproses teks yang sangat panjang secara efisien di background.
-- **Voice Library**: Kelola koleksi suara Anda sendiri.
+- **Multilingual**: Mendukung 23 bahasa dengan kemampuan model multibahasa.
+- **Streaming & SSE**: Dukungan streaming audio secara real-time (WAV) atau melalui Server-Side Events (SSE).
+- **Long Text Processing**: Memproses teks sangat panjang (hingga 100.000 karakter) di background dengan sistem antrean job.
+- **Voice Library**: Kelola koleksi suara kustom Anda secara persisten.
+- **Diagnostic Logging**: Dilengkapi dengan logs detail (breadcrumb) untuk memudahkan debugging konektivitas.
 
 ## Instalasi (Docker)
 
 Pastikan Anda sudah menginstal Docker dan Docker Compose.
 
-1.  Clone repository ini (jika belum).
-2.  Sesuaikan konfigurasi di file `.env`.
+1.  Clone repository ini.
+2.  Salin `.env.example` ke `.env` dan sesuaikan konfigurasinya:
+    ```bash
+    cp .env.example .env
+    ```
 3.  Jalankan aplikasi:
-
-```bash
-docker-compose up --build
-```
+    ```bash
+    docker-compose up --build
+    ```
 
 API akan tersedia di `http://localhost:4123`. Dokumentasi interaktif (Swagger UI) dapat diakses di `http://localhost:4123/docs`.
 
@@ -41,28 +45,6 @@ curl -X POST http://localhost:4123/v1/audio/speech \
   --output speech.wav
 ```
 
-#### Python
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:4123/v1/audio/speech",
-    json={
-        "input": "Halo, ini adalah contoh suara dari Python.",
-        "voice": "alloy",
-        "model": "chatterbox-multilingual"
-    }
-)
-
-if response.status_code == 200:
-    with open("speech.wav", "wb") as f:
-        f.write(response.content)
-    print("Berhasil menyimpan audio ke speech.wav")
-else:
-    print(f"Error: {response.status_code}")
-    print(response.json())
-```
-
 ### 2. Streaming Audio (Real-time)
 
 #### cURL (WAV Stream)
@@ -76,34 +58,50 @@ curl -X POST http://localhost:4123/v1/audio/speech \
   }' --no-buffer > stream.wav
 ```
 
-### 3. Long Text TTS (Background Processing)
+#### SSE Streaming (Server-Sent Events)
+Untuk mendapatkan audio chunk-by-chunk melalui SSE:
+```bash
+curl -X POST http://localhost:4123/v1/audio/speech/upload \
+  -F "input=Halo dari streaming SSE" \
+  -F "stream_format=sse"
+```
 
-Untuk teks yang sangat panjang (hingga 100.000 karakter), gunakan endpoint `long-text`.
+### 3. Long Text TTS (> 3000 Karakter)
 
-#### cURL
+Untuk teks yang sangat panjang, gunakan sistem job background:
+
+#### Create Job
 ```bash
 curl -X POST http://localhost:4123/v1/tts/long-text \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Masukkan teks yang sangat panjang di sini...",
+    "input": "Masukkan teks yang sangat panjang (> 3000 karakter) di sini...",
     "voice": "onyx"
   }'
 ```
 
-Response akan memberikan `job_id` yang bisa digunakan untuk mengecek status:
+#### Check Status
+Gunakan `job_id` dari response di atas:
 ```bash
 curl http://localhost:4123/v1/tts/long-text/status/{job_id}
 ```
 
-### 4. Health Check
+### 4. Health Check & Connectivity
 
+#### Root Health (Basic Connectivity)
+```bash
+curl http://localhost:4123/
+```
+
+#### Detailed Health (Model Status)
 ```bash
 curl http://localhost:4123/v1/health
 ```
 
 ## Konfigurasi Port
 
-Secara default, API berjalan di port **4123**. Jika Anda menggunakan Docker atau Coolify, pastikan port ini sudah di-expose atau disesuaikan melalui environment variable `PORT`.
+Secara default, API berjalan di port **4123**. Anda dapat mengubahnya melalui environment variable `PORT` di file `.env`.
 
 ---
-© 2026 Adsmedia.ai Development 
+© 2026 Adsmedia.ai Development
+ 
