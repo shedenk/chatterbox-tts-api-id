@@ -26,7 +26,6 @@ def main():
             reload=False,
             access_log=True,
             timeout_keep_alive=600,      # 10 minutes
-            timeout_notify=30,           # Signal check frequency
             timeout_graceful_shutdown=60, # More time for long jobs to finish
             limit_concurrency=50,        # Reduce concurrency to save CPU for each job
             backlog=2048                 # Higher request backlog
