@@ -140,8 +140,7 @@ async def initialize_model():
             _model = await loop.run_in_executor(
                 None, 
                 lambda: ChatterboxMultilingualTTS.from_pretrained(
-                    device=_device,
-                    cache_dir=Config.MODEL_CACHE_DIR
+                    device=_device
                 )
             )
             _is_multilingual = True
@@ -162,8 +161,7 @@ async def initialize_model():
             _model = await loop.run_in_executor(
                 None, 
                 lambda: ChatterboxTTS.from_pretrained(
-                    device=_device,
-                    cache_dir=Config.MODEL_CACHE_DIR
+                    device=_device
                 )
             )
             _is_multilingual = False
