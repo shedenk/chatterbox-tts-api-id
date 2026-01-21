@@ -4,6 +4,7 @@ Chatterbox TTS API Entry Point
 
 This is the main entry point for the application.
 It imports the FastAPI app from the organized app package.
+"""
 import sys
 
 # Silence redundant audio loading warnings early
