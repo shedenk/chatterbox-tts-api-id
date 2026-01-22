@@ -28,7 +28,7 @@ class LongTextJobActionType(str, Enum):
 
 class LongTextRequest(BaseModel):
     """Request model for long text TTS generation"""
-    input: str = Field(..., min_length=3001, description="Text to convert to speech (must be > 3000 characters)")
+    input: str = Field(..., min_length=1, description="Text to convert to speech (must be > MAX_TOTAL_LENGTH characters)")
     voice: Optional[str] = Field(None, description="Voice name from library or OpenAI voice name")
     response_format: Optional[str] = Field("mp3", description="Audio format (mp3 or wav)")
     exaggeration: Optional[float] = Field(None, ge=0.25, le=2.0, description="Emotion intensity")
@@ -63,7 +63,7 @@ class LongTextJobMetadata(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     status: LongTextJobStatus = Field(default=LongTextJobStatus.PENDING)
-    text_length: int = Field(..., ge=3001, description="Total characters in input text")
+    text_length: int = Field(..., ge=1, description="Total characters in input text")
     text_hash: str = Field(..., description="SHA256 hash of input text for deduplication")
     total_chunks: int = Field(..., ge=1, description="Total number of chunks")
     completed_chunks: int = Field(default=0, ge=0, description="Number of completed chunks")
