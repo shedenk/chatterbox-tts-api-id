@@ -182,6 +182,7 @@ class LongTextProcessor:
                 chunks[i] = chunk  # Update in list
 
                 logger.info(f"Job {job_id}: Processing chunk {i+1}/{len(chunks)} ({len(chunk.text)} chars)")
+                logger.info(f"Job {job_id}: Chunk text preview: '{chunk.text[:100]}{'...' if len(chunk.text) > 100 else ''}'")
 
                 try:
                     # Generate audio for this chunk
@@ -218,6 +219,8 @@ class LongTextProcessor:
 
                 except Exception as e:
                     logger.error(f"Job {job_id}: Failed to process chunk {i+1}: {e}")
+                    logger.error(f"Job {job_id}: Failed chunk text: '{chunk.text[:200]}{'...' if len(chunk.text) > 200 else ''}'")
+                    logger.error(f"Job {job_id}: Error type: {type(e).__name__}")
                     chunk.error = str(e)
                     chunks[i] = chunk
 

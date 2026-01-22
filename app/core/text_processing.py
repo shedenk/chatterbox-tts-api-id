@@ -12,12 +12,25 @@ from app.models.long_text import LongTextChunk
 
 
 def normalize_text(text: str) -> str:
-    """ Normalize text to remove or replace non-standard characters that might trip up the model """
+    """ 
+    Normalize text to remove or replace non-standard characters that might trip up the model.
+    This function aggressively normalizes text to ensure compatibility with the TTS model.
+    """
     if not text:
         return ""
     
+    # Validate UTF-8 encoding
+    try:
+        # Try encoding/decoding to ensure valid UTF-8
+        text = text.encode('utf-8', errors='ignore').decode('utf-8')
+    except Exception as e:
+        print(f"⚠️  UTF-8 validation warning: {e}")
+    
     # Use standard NFC normalization first
     text = unicodedata.normalize('NFC', text)
+    
+    # Track replacements for logging
+    replacements_made = []
     
     # Replace common "smart" characters and symbols that are often problematic
     replacements = {
@@ -28,28 +41,50 @@ def normalize_text(text: str) -> str:
         # Ellipses
         '…': '...',
         # Accented characters (Indonesian sometimes uses these in names or loanwords)
-        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-        'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a',
-        'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-        'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o',
-        'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+        # Common Latin accents
+        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e', 'ē': 'e', 'ė': 'e', 'ę': 'e',
+        'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a', 'ā': 'a', 'ã': 'a', 'å': 'a',
+        'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i', 'ī': 'i', 'į': 'i',
+        'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o', 'ō': 'o', 'õ': 'o', 'ø': 'o',
+        'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u', 'ū': 'u', 'ũ': 'u',
         'ñ': 'n', 'ç': 'c',
+        # Uppercase accented characters
+        'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
+        'Á': 'A', 'À': 'A', 'Â': 'A', 'Ä': 'A',
+        'Í': 'I', 'Ì': 'I', 'Î': 'I', 'Ï': 'I',
+        'Ó': 'O', 'Ò': 'O', 'Ô': 'O', 'Ö': 'O',
+        'Ú': 'U', 'Ù': 'U', 'Û': 'U', 'Ü': 'U',
+        'Ñ': 'N', 'Ç': 'C',
         # glottal stop / hamzah marks sometimes copy-pasted in Indonesian
-        'ʿ': "'", 'ʾ': "'", 'ʻ': "'", 'ʼ': "'", 'ʽ': "'"
+        'ʿ': "'", 'ʾ': "'", 'ʻ': "'", 'ʼ': "'", 'ʽ': "'",
+        # Other common problematic characters
+        '‚': ',', '„': '"', '‹': '<', '›': '>', '«': '"', '»': '"',
     }
     
-    # Bulk replace for performance
-    # Use a translation table for efficiency if needed, but dict.replace is clear
+    # Apply replacements and track what was changed
     for char, replacement in replacements.items():
         if char in text:
-            # Only print if it's a non-standard character we're replacing
-            # Skipping frequent logs for standard accents to avoid flooding
-            if ord(char) > 255 or char in '“”‘’–—…':
-                print(f"🔄 Normalizing character '{char}' -> '{replacement}'")
+            count = text.count(char)
+            replacements_made.append(f"'{char}'→'{replacement}' ({count}x)")
             text = text.replace(char, replacement)
+    
+    # Log replacements if any were made
+    if replacements_made:
+        print(f"🔄 Text normalization: {', '.join(replacements_made)}")
             
     # Remove other control characters and problematic non-printable chars
+    original_len = len(text)
     text = "".join(ch for ch in text if unicodedata.category(ch)[0] != "C" or ch in "\n\r\t")
+    
+    if len(text) != original_len:
+        removed_count = original_len - len(text)
+        print(f"🧹 Removed {removed_count} control character(s)")
+    
+    # Final validation: check for any remaining high-unicode characters that might cause issues
+    high_unicode_chars = [ch for ch in text if ord(ch) > 127 and ch not in "\n\r\t"]
+    if high_unicode_chars:
+        unique_chars = list(set(high_unicode_chars))
+        print(f"⚠️  Warning: {len(high_unicode_chars)} high-unicode characters remain: {unique_chars[:10]}")
             
     return text.strip()
 

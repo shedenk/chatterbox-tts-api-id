@@ -246,26 +246,46 @@ async def generate_speech_internal(
             
             print(f"Generating audio for chunk {i+1}/{len(chunks)}: '{chunk[:50]}{'...' if len(chunk) > 50 else ''}'")
             
+            # Validate chunk before processing
+            try:
+                # Ensure chunk is valid UTF-8
+                chunk_bytes = chunk.encode('utf-8')
+                chunk = chunk_bytes.decode('utf-8')
+            except Exception as e:
+                print(f"⚠️  Warning: UTF-8 encoding issue in chunk {i+1}: {e}")
+                print(f"   Chunk preview: {repr(chunk[:100])}")
+            
             # Use torch.no_grad() to prevent gradient accumulation
             with torch.no_grad():
-                # Run TTS generation in executor to avoid blocking
-                # Prepare generation kwargs
-                generate_kwargs = {
-                    "text": chunk,
-                    "audio_prompt_path": voice_sample_path,
-                    "exaggeration": exaggeration,
-                    "cfg_weight": cfg_weight,
-                    "temperature": temperature
-                }
-                
-                # Add language_id for multilingual models
-                if is_multilingual():
-                    generate_kwargs["language_id"] = language_id
-                
-                audio_tensor = await loop.run_in_executor(
-                    None,
-                    lambda: model.generate(**generate_kwargs)
-                )
+                try:
+                    # Run TTS generation in executor to avoid blocking
+                    # Prepare generation kwargs
+                    generate_kwargs = {
+                        "text": chunk,
+                        "audio_prompt_path": voice_sample_path,
+                        "exaggeration": exaggeration,
+                        "cfg_weight": cfg_weight,
+                        "temperature": temperature
+                    }
+                    
+                    # Add language_id for multilingual models
+                    if is_multilingual():
+                        generate_kwargs["language_id"] = language_id
+                    
+                    # Log chunk details for debugging
+                    print(f"   Chunk text length: {len(chunk)} chars, language: {language_id}")
+                    
+                    audio_tensor = await loop.run_in_executor(
+                        None,
+                        lambda: model.generate(**generate_kwargs)
+                    )
+                    
+                except Exception as chunk_error:
+                    print(f"❌ Error generating audio for chunk {i+1}: {chunk_error}")
+                    print(f"   Chunk text: {repr(chunk[:200])}")
+                    print(f"   Generation params: exag={exaggeration}, cfg={cfg_weight}, temp={temperature}")
+                    # Re-raise to be caught by outer exception handler
+                    raise
                 
                 if audio_tensor is None:
                     print(f"⚠️ Warning: Model returned None for chunk {i+1}")
