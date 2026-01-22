@@ -12,28 +12,46 @@ from app.models.long_text import LongTextChunk
 
 
 def normalize_text(text: str) -> str:
-    """ Normalize text to remove or replace non-standard characters """
+    """ Normalize text to remove or replace non-standard characters that might trip up the model """
     if not text:
         return ""
     
-    # Replace common accented characters that might trip up simple models
-    # This keeps the character but decomposes it, then we can filter if needed
-    # For now, let's just do a simple replacement for common ones like Pelé
+    # Use standard NFC normalization first
+    text = unicodedata.normalize('NFC', text)
+    
+    # Replace common "smart" characters and symbols that are often problematic
     replacements = {
+        # Smart quotes
+        '“': '"', '”': '"', '‘': "'", '’': "'",
+        # Various dashes and hyphens
+        '–': '-', '—': '-', '−': '-', '‐': '-',
+        # Ellipses
+        '…': '...',
+        # Accented characters (Indonesian sometimes uses these in names or loanwords)
         'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
         'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a',
         'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
         'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o',
         'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
-        'ñ': 'n', 'ç': 'c'
+        'ñ': 'n', 'ç': 'c',
+        # glottal stop / hamzah marks sometimes copy-pasted in Indonesian
+        'ʿ': "'", 'ʾ': "'", 'ʻ': "'", 'ʼ': "'", 'ʽ': "'"
     }
     
+    # Bulk replace for performance
+    # Use a translation table for efficiency if needed, but dict.replace is clear
     for char, replacement in replacements.items():
         if char in text:
-            print(f"🔄 Normalizing character '{char}' -> '{replacement}' in text")
+            # Only print if it's a non-standard character we're replacing
+            # Skipping frequent logs for standard accents to avoid flooding
+            if ord(char) > 255 or char in '“”‘’–—…':
+                print(f"🔄 Normalizing character '{char}' -> '{replacement}'")
             text = text.replace(char, replacement)
             
-    return text
+    # Remove other control characters and problematic non-printable chars
+    text = "".join(ch for ch in text if unicodedata.category(ch)[0] != "C" or ch in "\n\r\t")
+            
+    return text.strip()
 
 
 def split_text_into_chunks(text: str, max_length: int = None) -> list:

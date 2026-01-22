@@ -830,7 +830,10 @@ async def text_to_speech(request: TTSRequest):
     """Generate speech from text using Chatterbox TTS with voice selection support"""
     
     # Resolve voice name to file path and language
-    print(f"📥 Received TTS request: {request.input[:50]}...")
+    # Log the first part of input for debugging
+    input_preview = request.input[:100].replace('\n', ' ') + ('...' if len(request.input) > 100 else '')
+    print(f"📥 Received TTS request: [{len(request.input)} chars] '{input_preview}'")
+    
     voice_sample_path, language_id = resolve_voice_path_and_language(request.voice)
     print(f"🎙️ Resolved voice: {request.voice} -> {voice_sample_path}, lang: {language_id}")
     
@@ -872,7 +875,11 @@ async def text_to_speech(request: TTSRequest):
         response = StreamingResponse(
             io.BytesIO(buffer.getvalue()),
             media_type="audio/wav",
-            headers={"Content-Disposition": "attachment; filename=speech.wav"}
+            headers={
+                "Content-Disposition": "attachment; filename=speech.wav",
+                "X-Accel-Buffering": "no",  # Disable nginx buffering
+                "Cache-Control": "no-cache"
+            }
         )
         
         return response
@@ -1066,7 +1073,9 @@ async def stream_text_to_speech(request: TTSRequest):
     """Stream speech generation from text using Chatterbox TTS with voice selection support"""
     
     # Resolve voice name to file path and language
-    print(f"📥 Received streaming TTS request: {request.input[:50]}...")
+    input_preview = request.input[:100].replace('\n', ' ') + ('...' if len(request.input) > 100 else '')
+    print(f"📥 Received streaming TTS request: [{len(request.input)} chars] '{input_preview}'")
+    
     voice_sample_path, language_id = resolve_voice_path_and_language(request.voice)
     print(f"🎙️ Resolved voice: {request.voice} -> {voice_sample_path}, lang: {language_id}")
     

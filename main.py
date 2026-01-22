@@ -40,7 +40,8 @@ def main():
             port=Config.PORT,
             reload=False,
             access_log=True,
-            timeout_keep_alive=600  # 10 minutes for long generations
+            timeout_keep_alive=300,  # Match nginx proxy_read_timeout (5 minutes)
+            timeout_graceful_shutdown=30
         )
     except ImportError as e:
         print(f"\n❌ CRITICAL: Dependency error: {e}")
