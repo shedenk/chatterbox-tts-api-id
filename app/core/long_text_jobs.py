@@ -809,13 +809,21 @@ class LongTextJobManager:
             logger.error(f"Failed to delete job {job_id}: {e}")
             return False
 
-    def cleanup_old_jobs(self, retention_days: Optional[int] = None, max_storage_bytes: Optional[int] = None):
+    def cleanup_old_jobs(self, retention_days: Optional[int] = None, max_storage_bytes: Optional[int] = None, max_age_seconds: Optional[int] = None):
         """Clean up old jobs based on retention policy and storage limits"""
         if not self.data_dir.exists():
             return
 
         retention_days = retention_days or Config.LONG_TEXT_JOB_RETENTION_DAYS
-        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+        
+        # Calculate cutoff date
+        if max_age_seconds is not None:
+             cutoff_date = datetime.utcnow() - timedelta(seconds=max_age_seconds)
+             failed_cutoff = cutoff_date # Use same cutoff for all if seconds specified
+        else:
+            cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+            failed_cutoff = datetime.utcnow() - timedelta(days=max(7, retention_days // 4))
+            
         deleted_count = 0
         freed_bytes = 0
 
@@ -831,14 +839,18 @@ class LongTextJobManager:
             # Delete based on retention policy
             should_delete = False
             comparison_date = metadata.completion_timestamp or metadata.created_at
+            
+            # Skip if date is missing
+            if not comparison_date:
+                continue
 
             if metadata.status == LongTextJobStatus.COMPLETED:
                 # Keep completed jobs longer if they're not archived
                 if metadata.is_archived and comparison_date < cutoff_date:
                     should_delete = True
+                elif not metadata.is_archived and comparison_date < cutoff_date:
+                    should_delete = True
             elif metadata.status in [LongTextJobStatus.FAILED, LongTextJobStatus.CANCELLED]:
-                # Delete failed/cancelled jobs sooner
-                failed_cutoff = datetime.utcnow() - timedelta(days=max(7, retention_days // 4))
                 if comparison_date < failed_cutoff:
                     should_delete = True
 
